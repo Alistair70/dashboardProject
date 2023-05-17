@@ -15,23 +15,6 @@ st.sidebar.header('Dashboard `version 3`')
 st.sidebar.subheader('District')
 zone = st.sidebar.selectbox('Select District',('West Harlem','Central Harlem','East Harlem','Washinton Heights'))
 
-st.sidebar.subheader('Select Borough')
-time_hist_color = st.sidebar.selectbox('Color by', ('temp_min', 'temp_max')) 
-
-st.sidebar.subheader('Donut chart parameter')
-donut_theta = st.sidebar.selectbox('Select data', ('q2', 'q3'))
-
-st.sidebar.subheader('Line chart parameters')
-plot_data = st.sidebar.multiselect('Select data', ['temp_min', 'temp_max'], ['temp_min', 'temp_max'])
-plot_height = st.sidebar.slider('Specify plot height', 200, 500, 250)
-
-
-
-st.sidebar.markdown('''
----
-Created with ❤️ by [Data Professor](https://youtube.com/dataprofessor/).
-''')
-
 # Relating District Names with zip codes and community/districs numbers
 
 name_to_dist = {'West Harlem':'09',
@@ -129,7 +112,7 @@ nyc_hate_crime_offense.rename(columns = {'offense_category':'Offense','full_comp
 #Row 1 - Refuse/Paper/MGP Tonnage
 
 st.markdown('### Refuse Tonnage')
-st.line_chart(nyc_refuse, x = 'Month', y=['Refuse','Paper','MGP'], height=plot_height )
+st.line_chart(nyc_refuse, x = 'Month', y=['Refuse','Paper','MGP'], height = 350 )
 
 #Row 2 - 311 Bar Graph
 
