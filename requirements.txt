@@ -1,4 +1,6 @@
 streamlit
 pandas
 plost
-datetime
+plotly
+plotly.graph_objects
+plotly.express

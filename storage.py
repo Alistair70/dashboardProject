@@ -22,6 +22,50 @@ print(datetime.datetime.now())
 
 print(nyc_311_1)
 
+#311 Breakdown V2
+
+ct = datetime.datetime.now()
+nyc_311 = pd.read_csv('https://data.cityofnewyork.us/resource/sebv-z45x.csv')
+print(datetime.datetime.now() - ct)
+nyc_311 = nyc_311[nyc_311['Incident Zip'].isin(zipAll)]
+nyc_311 = nyc_311.groupby(['Complaint Type'], sort = True).count()
+nyc_311 = nyc_311.reset_index() 
+nyc_311.rename(columns= {'Complaint Type':'Complaint','Unique Key':'Incidents'}, inplace = True)
+nyc_311 = nyc_311.sort_values(by=['Incidents'], ascending=False)
+nyc_311.to_csv('311.csv')
+
+noise = ['Noise - Residential','Noise - Street/Sidewalk','Noise','Noise - Commercial','Noise - Vehicle','Noise - Helicopter','Noise - Park','Noise - House of Worship']
+el_comp = ['HEAT/HOT WATER','PLUMBING','ELECTRIC','WATER LEAK']
+housing_comp = ['PAINT/PLASTER','DOOR/WINDOW','FLOORING/STAIRS','ELEVATOR']
+
+Complaint = ['Noise','Illegal Parking','Unsanitory Condition','Utility Issues','Non-Emergency Police','Rodent','Housing Complaint','Other']
+Amount = [0,0,0,0,0,0,0,0]
+
+for i in nyc_311.index:
+    if nyc_311['Complaint'][i] is noise:
+        Amount[0] += nyc_311['Incidents'][i]
+    elif 'Illegal Parking' in nyc_311['Complaint'][i]:
+        Amount[1] += nyc_311['Incidents'][i]
+    elif 'UNSANITARY CONDITION' in nyc_311['Complaint'][i]:
+        Amount[2] += nyc_311['Incidents'][i]
+    elif nyc_311['Complaint'][i] in el_comp:
+        Amount[3] += nyc_311['Incidents'][i]
+    elif 'Non-Emergency Police' in nyc_311['Complaint'][i]:
+        Amount[4] += nyc_311['Incidents'][i]
+    elif 'Rodent' in nyc_311['Complaint'][i]:
+        Amount[5] += nyc_311['Incidents'][i]
+    elif nyc_311['Complaint'][i] in housing_comp:
+        Amount[6] += nyc_311['Incidents'][i]
+    else:
+        Amount[7] += nyc_311['Incident Zip'][i]
+
+print(Amount)
+
+data = {'Complaint': Complaint, 'Incidents':Amount}
+
+st.markdown('### 311 Bar Graph')
+st.bar_chart(data, x = 'Complaint', y= 'Incidents', height = 350)
+print(datetime.datetime.now())
 
 #Trash Collection Numbers
 
@@ -53,18 +97,36 @@ st.bar_chart(nyc_crime, x = 'Description', y = 'Incidents', height = 350)
 
 #Traffic collisions
 
-ct = datetime.datetime.now()
-nyc_tr_col = pd.read_csv('https://data.cityofnewyork.us/resource/h9gi-nx95.csv?$order=crash_date%20DESC&borough=MANHATTAN')
-print(datetime.datetime.now() - ct)
+ct = datetime.now()
+nyc_tr_col = pd.read_csv('https://data.cityofnewyork.us/resource/h9gi-nx95.csv?$order=crash_date%20DESC&borough=MANHATTAN', 
+                         usecols={'zip_code','crash_date','borough','contributing_factor_vehicle_1'})
+
+print(datetime.now() - ct)
 nyc_tr_col = nyc_tr_col[nyc_tr_col['zip_code'].isin(zip)]
 nyc_tr_col_amt = nyc_tr_col.groupby(['crash_date']).count()
 nyc_tr_col_amt = nyc_tr_col_amt.reset_index()
 nyc_tr_col_amt.to_csv('crash_amt.csv')
 nyc_tr_col_amt.rename(columns={'crash_date':'Date','borough':'Incidents'}, inplace = True)
+nyc_tr_col_amt['Date'] = pd.to_datetime(nyc_tr_col_amt['Date'])
+
+
+s = nyc_tr_col_amt['Date'].iloc[0]
+e = nyc_tr_col_amt['Date'].iloc[-1] 
+
+print(pd.date_range(start = s, end = e).difference(nyc_tr_col_amt['Date']))
+missing_dates = pd.date_range(start = s, end = e).difference(nyc_tr_col_amt['Date'])
+
+for i in missing_dates:
+    nyc_tr_col_amt.loc[len(nyc_tr_col_amt.index)] = [i, 0, 0, 0] 
+
+nyc_tr_col_amt = nyc_tr_col_amt.sort_values(by=['Date'])
+nyc_tr_col_amt.to_csv('crash_amt.csv')
+
+
 nyc_tr_col_fact = nyc_tr_col.groupby(['contributing_factor_vehicle_1']).count()
 nyc_tr_col_fact = nyc_tr_col_fact.reset_index()
 nyc_tr_col_fact.rename(columns = {'contributing_factor_vehicle_1':'Factor','crash_date':'Instances'},inplace = True)
-print(nyc_tr_col)
+
 nyc_tr_col.to_csv('final.csv')
 c1, c2, = st.columns((7,3))
 with c1:
@@ -75,6 +137,71 @@ with c2:
     st.markdown('### Traffic Accident Factors Breakdown')
     plost.donut_chart(
         data=nyc_tr_col_fact,
+        theta='Instances',
+        color='Factor',
+    ) 
+
+#Traffic Collisions V2
+
+ct = datetime.datetime.now()
+nyc_tr_col = pd.read_csv('https://data.cityofnewyork.us/resource/h9gi-nx95.csv?$order=crash_date%20DESC&borough=MANHATTAN', 
+                         usecols={'zip_code','crash_date','borough','contributing_factor_vehicle_1'})
+
+print(datetime.datetime.now() - ct)
+nyc_tr_col = nyc_tr_col[nyc_tr_col['zip_code'].isin(zip)]
+nyc_tr_col_amt = nyc_tr_col.groupby(['crash_date']).count()
+nyc_tr_col_amt = nyc_tr_col_amt.reset_index()
+nyc_tr_col_amt.to_csv('crash_amt.csv')
+nyc_tr_col_amt.rename(columns={'crash_date':'Date','borough':'Incidents'}, inplace = True)
+nyc_tr_col_amt['Date'] = pd.to_datetime(nyc_tr_col_amt['Date'])
+
+
+s = nyc_tr_col_amt['Date'].iloc[0]
+e = nyc_tr_col_amt['Date'].iloc[-1] 
+
+print(pd.date_range(start = s, end = e).difference(nyc_tr_col_amt['Date']))
+missing_dates = pd.date_range(start = s, end = e).difference(nyc_tr_col_amt['Date'])
+
+for i in missing_dates:
+    nyc_tr_col_amt.loc[len(nyc_tr_col_amt.index)] = [i, 0, 0, 0] 
+
+nyc_tr_col_amt = nyc_tr_col_amt.sort_values(by=['Date'])
+nyc_tr_col_amt.to_csv('crash_amt.csv')
+
+
+nyc_tr_col_fact = nyc_tr_col.groupby(['contributing_factor_vehicle_1']).count()
+nyc_tr_col_fact = nyc_tr_col_fact.reset_index()
+nyc_tr_col_fact.rename(columns = {'contributing_factor_vehicle_1':'Factor','crash_date':'Instances'},inplace = True)
+nyc_tr_col_fact = nyc_tr_col_fact.sort_values(by='Instances', ascending=False)
+
+nyc_tr_col_fact.to_csv('final.csv')
+
+f1 = nyc_tr_col_fact['Factor'].values.tolist()
+i1 = nyc_tr_col_fact['Instances'].values.tolist()
+
+remove = len(i1) - 9
+total_other = sum(i1[-remove:])
+
+f1 = f1[: len(f1) - remove]
+i1 = i1[: len(i1) - remove]
+
+f1.append('Other')
+i1.append(total_other)
+print(f1)
+
+factors = {'Factor':f1,'Instances':i1}
+factors_df = pd.DataFrame(factors)
+
+
+c1, c2, = st.columns((7,3))
+with c1:
+    st.markdown('### Recent Traffic Accidents')
+    st.line_chart(nyc_tr_col_amt, x = 'Date', y = 'Incidents')
+
+with c2:
+    st.markdown('### Traffic Accident Factors Breakdown')
+    plost.donut_chart(
+        data=factors_df,
         theta='Instances',
         color='Factor',
     ) 
@@ -109,3 +236,10 @@ with c2:
         color='Offense',
         legend='bottom', 
         use_container_width=True)
+
+
+# Plotly Pie chart
+
+fig = go.Figure(data=[go.Pie(labels=nyc_hate_crime_offense['Offense'], values = nyc_hate_crime_offense['Instances'], hole = .3)])
+fig.update_traces(textinfo = 'value')
+st.plotly_chart(fig, config = {'displayModeBar': False}) 

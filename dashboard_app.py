@@ -1,21 +1,20 @@
 import streamlit as st
 import pandas as pd
 import plost
-import datetime
 from streamlit_autorefresh import st_autorefresh
-import plotly.graph_objects as go
 
-st.set_page_config(layout='wide', initial_sidebar_state='expanded')
+st.set_page_config(layout='wide')
+st_autorefresh(interval=10000)
 
 with open('style.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
     
-st.sidebar.header('Community Dashboard \n `Harlem`')
+st.header('Uptown Community Dashboard')
 
 # Creates a dropdown options box for each of the four districts - May change names in future
 
-st.sidebar.subheader('District')
-zone = st.sidebar.selectbox('Select District',('West Harlem','Central Harlem','East Harlem','Washinton Heights'))
+st.subheader('District')
+zone = st.selectbox('Select District',('West Harlem','Central Harlem','East Harlem','Washinton Heights'))
 
 # Relating District Names with zip codes and community/districs numbers
 
@@ -50,7 +49,9 @@ def getTrafficAccData():
     data = pd.read_csv('https://data.cityofnewyork.us/resource/h9gi-nx95.csv?$order=crash_date%20DESC&borough=MANHATTAN', 
                          usecols={'zip_code','crash_date','borough','contributing_factor_vehicle_1'})
     return data
-
+def getHateCrimeData():
+    data = pd.read_csv('https://data.cityofnewyork.us/resource/bqiq-cu78.csv?$order=record_create_date%20DESC&$limit=2200')
+    return data
 
 
 ########## Logic
@@ -58,9 +59,7 @@ def getTrafficAccData():
 # Logic 1 - Refuse Line Graph
 
 district = name_to_dist[zone]
-ct = datetime.datetime.now()
 nyc_refuse = getRefuseData()
-print(datetime.datetime.now() - ct)
 nyc_refuse = nyc_refuse[nyc_refuse['borough'] == 'Manhattan']
 nyc_refuse = nyc_refuse[nyc_refuse['communitydistrict'] == district]
 nyc_refuse.rename(columns = {'month':'Month','refusetonscollected':'Refuse','papertonscollected':'Paper','mgptonscollected':'MGP'}, inplace = True)
@@ -68,9 +67,7 @@ nyc_refuse.rename(columns = {'month':'Month','refusetonscollected':'Refuse','pap
 # Logic 2 - 311 breakdown
 
 zipCode = name_to_zip[zone]
-ct = datetime.datetime.now()
 nyc_311 = get311Data()
-print(datetime.datetime.now() - ct)
 nyc_311 = nyc_311[nyc_311['Incident Zip'].isin(zipCode)]
 nyc_311 = nyc_311.groupby(['Complaint Type'], sort = True).count()
 nyc_311 = nyc_311.reset_index() 
@@ -78,7 +75,7 @@ nyc_311.rename(columns= {'Complaint Type':'Complaint','Unique Key':'Incidents'},
 nyc_311 = nyc_311.sort_values(by=['Incidents'], ascending=False)
 
 noise = ['Noise - Residential','Noise - Street/Sidewalk','Noise','Noise - Commercial','Noise - Vehicle','Noise - Helicopter','Noise - Park','Noise - House of Worship']
-el_comp = ['HEAT/HOT WATER','PLUMBING','ELECTRIC','WATER LEAK']
+util_comp = ['HEAT/HOT WATER','PLUMBING','ELECTRIC','WATER LEAK']
 housing_comp = ['PAINT/PLASTER','DOOR/WINDOW','FLOORING/STAIRS','ELEVATOR']
 
 Complaint = ['Noise','Illegal Parking','Unsanitory Condition','Utility Issues','Non-Emergency Police','Rodent','Housing Complaint','Other']
@@ -91,7 +88,7 @@ for i in nyc_311.index:
         Amount[1] += nyc_311['Incidents'][i]
     elif 'UNSANITARY CONDITION' in nyc_311['Complaint'][i]:
         Amount[2] += nyc_311['Incidents'][i]
-    elif nyc_311['Complaint'][i] in el_comp:
+    elif nyc_311['Complaint'][i] in util_comp:
         Amount[3] += nyc_311['Incidents'][i]
     elif 'Non-Emergency Police' in nyc_311['Complaint'][i]:
         Amount[4] += nyc_311['Incidents'][i]
@@ -105,16 +102,10 @@ for i in nyc_311.index:
 data = {'Complaint': Complaint, 'Incidents':Amount}
 df = pd.DataFrame.from_dict(data)
 
-def getHateCrimeData():
-    data = pd.read_csv('https://data.cityofnewyork.us/resource/bqiq-cu78.csv?$order=record_create_date%20DESC&$limit=2200')
-    return data
-
 # Logic 3 - Crime
 
 pol_pd = name_to_pd_precint[zone]
-ct = datetime.datetime.now()
 nyc_crime = getCrimeData()
-print(datetime.datetime.now() - ct)
 nyc_crime = nyc_crime[nyc_crime['arrest_precinct'].isin(pol_pd)]
 nyc_crime = nyc_crime.groupby(['ofns_desc']).count()
 nyc_crime = nyc_crime.reset_index()
@@ -123,9 +114,7 @@ nyc_crime.rename(columns = {'ofns_desc':'Description','arrest_key':'Incidents'},
 #Logic 4 - Traffic Accidents
 
 zip = name_to_zip[zone]
-ct = datetime.datetime.now()
 nyc_tr_col = getTrafficAccData()
-print(datetime.datetime.now() - ct)
 nyc_tr_col = nyc_tr_col[nyc_tr_col['zip_code'].isin(zip)]
 
 #Logic 4a - Amount of Traffic Accidents
@@ -169,9 +158,7 @@ factors_df = pd.DataFrame(factors)
 
 #Logic 5
 
-ct = datetime.datetime.now()
 nyc_hate_crime = getHateCrimeData()
-print(datetime.datetime.now() - ct)
 #nyc_hate_crime = nyc_hate_crime[nyc_hate_crime['complaint_precinct_code'].isin(pol_pd)]
 
 # Logic 5a - Hate Crime Bias
@@ -200,7 +187,7 @@ st.bar_chart(data, x = 'Complaint', y= 'Incidents', height = 350)
 
 #Row 3 - Crime Breakdown 
 st.markdown('### Recent Crime Breakdown')
-st.bar_chart(nyc_crime, x = 'Description', y = 'Incidents', height = 350)
+st.bar_chart(nyc_crime, x = 'Description', y = 'Incidents', height = 500)
 
 #Row 4 - Traffic Accidents
 c1, c2, = st.columns((7,3))
@@ -221,26 +208,13 @@ with c2:
 
 c1, c2, = st.columns((7,3))
 with c1:
-    st.markdown('### Hate Crime Biases')
-    st.bar_chart(nyc_hate_crime_bias, x = 'Bias', y = 'Instances', height = 350)
+    st.markdown('### City-Wide Hate Crime Biases')
+    st.bar_chart(nyc_hate_crime_bias, x = 'Bias', y = 'Instances', height = 500)
 with c2:
-    st.markdown('### Hate Crime Offences')
+    st.markdown('### City-Wide Hate Crime Offences')
     plost.donut_chart(
         data=nyc_hate_crime_offense,
         theta='Instances',
         color='Offense',
         legend='bottom', 
         use_container_width=True)
-
-# Weather
-st.markdown('### Metrics')
-col1, col2, col3 = st.columns(3)
-col1.metric("Temperature", "70 °F", "1.2 °F")
-col2.metric("Wind", "9 mph", "-8%")
-col3.metric("Humidity", "86%", "4%")
-
-#st_autorefresh(interval=10000)
-
-fig = go.Figure(data=[go.Pie(labels=nyc_hate_crime_offense['Offense'], values = nyc_hate_crime_offense['Instances'], hole = .3)])
-fig.update_traces(textinfo = 'value')
-st.plotly_chart(fig, config = {'displayModeBar': False}) 
