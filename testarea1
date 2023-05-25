@@ -1,3 +1,0 @@
-name_to_zip = {'West Harlem':'08','West Harlem':'09','Central Harlem':'10','East Harlem':'11','Washinton Heights':'12'}
-
-print(name_to_zip['West Harlem'])
