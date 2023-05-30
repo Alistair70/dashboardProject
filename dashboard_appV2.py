@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 st.set_page_config(layout='wide')
-st_autorefresh(interval=600000)      # Number represents time units. Units here in milliseconds
+st_autorefresh(interval = 1800000)      # Number represents time units. Units here in milliseconds
 
 with open('style.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
@@ -29,20 +29,20 @@ zone = st.selectbox('Select District',('West Harlem','Central Harlem','East Harl
 name_to_dist = {'West Harlem':'09',
                 'Central Harlem':'10',
                 'East Harlem':'11',
-                'Washinton Heights':'12'}
+                'Washington Heights':'12'}
 
 name_to_zip = {'West Harlem':[10025,10031,10039],
                'Central Harlem':[10026,10027,10030,10037],
                'East Harlem' : [10029,10035],
-               'Washinton Heights' : [10032,10033,10040]}
+               'Washington Heights' : [10032,10033,10040]}
 
 name_to_pd_precint = {'West Harlem' : [24,26,30],
                       'Central Harlem' : [28,32],
                       'East Harlem' : [23,25],
-                      'Washinton Heights' : [33,34]}
+                      'Washington Heights' : [33,34]}
 
 # Getting and Caching Data
-@st.cache_data(ttl=59)          # Number represents time units. Units here in seconds
+@st.cache_data(ttl=179)          # Number represents time units. Units here in seconds
 def getRefuseData():
     data = pd.read_csv('https://data.cityofnewyork.us/resource/ebb7-mvp5.csv')
     return data
