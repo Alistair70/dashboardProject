@@ -180,7 +180,7 @@ st.markdown('### Recent Crime Breakdown')
 st.bar_chart(nyc_crime, x = 'Description', y = 'Incidents', height = 500)
 
 #Row 2 - 311 Bar Graph
-st.markdown('### 311 Bar Graph')
+st.markdown('### 311 Requests')
 st.bar_chart(data, x = 'Complaint', y= 'Incidents', height = 350)
 
 #Row 3 - Traffic Accidents
@@ -213,5 +213,5 @@ with c2:
         use_container_width=True)
     
 #Row 1 - Refuse/Paper/MGP Tonnage
-st.markdown('### Refuse Tonnage')
+st.markdown('### Garbage Collection')
 st.line_chart(nyc_refuse, x = 'Month', y=['Refuse','Paper','MGP'], height = 350 )

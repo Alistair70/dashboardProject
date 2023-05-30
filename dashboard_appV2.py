@@ -176,11 +176,15 @@ sorted = nyc_refuse.sort_values('Month')
 #Row 1 - Crime Breakdown 
 st.markdown('### Recent Crime Breakdown')
 fig = px.bar(nyc_crime, x = 'Description', y = 'Incidents', height = 350)
+fig.update_xaxes(fixedrange=True)
+fig.update_yaxes(fixedrange=True)
 st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False})
 
 #Row 2 - 311 Bar Graph
-st.markdown('### 311 Bar Graph')
+st.markdown('### 311 Requests')
 fig = px.bar(nyc_311_grouped, x = 'Complaint', y = 'Incidents', height = 350)
+fig.update_xaxes(fixedrange=True)
+fig.update_yaxes(fixedrange=True)
 st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False})
 
 #Row 3 - Traffic Accidents
@@ -188,7 +192,9 @@ c1, c2, = st.columns((7,3))
 with c1:
     st.markdown('### Recent Traffic Accidents')
     fig = px.line(nyc_tr_col_amt, x = 'Date', y = 'Incidents', height = 350)
-    st.plotly_chart(fig, use_container_width=True)
+    fig.update_xaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True)
+    st.plotly_chart(fig, use_container_width=True,config = {'displayModeBar': False})
 
 with c2:
     st.markdown('### Traffic Accident Factors')
@@ -204,7 +210,9 @@ c1, c2, = st.columns((7,3))
 with c1:
     st.markdown('### Hate Crime Biases')
     fig = px.bar(nyc_hate_crime_bias, x = 'Bias', y = 'Instances', height = 500)    
-    st.plotly_chart(fig, use_container_width=True)
+    fig.update_xaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True)
+    st.plotly_chart(fig, use_container_width=True,config = {'displayModeBar': False})
 with c2:
     st.markdown('### Hate Crime Offences')
     plost.donut_chart(
@@ -215,7 +223,7 @@ with c2:
         use_container_width=True)
     
 #Row 5 - Refuse/Paper/MGP Tonnage
-st.markdown('### Refuse Tonnage')
+st.markdown('### Garbage Collection')
 trace1 = go.Scatter(x = sorted['Month'], y = sorted['Refuse'], mode = 'lines', name = 'Refuse')
 trace2 = go.Scatter(x = sorted['Month'], y = sorted['Paper'], mode  = 'lines', name = 'Paper')
 trace3 = go.Scatter(x = sorted['Month'], y = sorted['MGP'], mode  = 'lines', name = 'Metal/Glass/Plastic')
