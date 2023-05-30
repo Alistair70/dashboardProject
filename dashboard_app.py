@@ -24,7 +24,7 @@ st.header('Uptown Community Dashboard')
 
 # Creates a dropdown options box for each of the four districts - May change names in future
 st.subheader('District')
-zone = st.selectbox('Select District',('West Harlem','Central Harlem','East Harlem','Washinton Heights'))
+zone = st.selectbox('Select District',('West Harlem','Central Harlem','East Harlem','Washington Heights'))
 
 # Relating District Names with zip codes and community/districs numbers
 name_to_dist = {'West Harlem':'09',
