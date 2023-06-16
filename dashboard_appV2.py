@@ -59,6 +59,9 @@ def getTrafficAccData():
 def getHateCrimeData():
     data = pd.read_csv('https://data.cityofnewyork.us/resource/bqiq-cu78.csv?$order=record_create_date%20DESC&$limit=2200')
     return data
+def getAirQuality():
+    data = pd.read_csv('https://azdohv2staticweb.blob.core.windows.net/$web/nyccas_realtime_DEC.csv')
+    return data
 
 
 ########## Logic
@@ -107,12 +110,16 @@ for i in nyc_311.index:
 
 nyc_311_grouped = {'Complaint': Complaint, 'Incidents':Amount}
 
-#Logic 3 - Traffic Accidents
+#Logic 3 Air Quality
+nyc_air_quality = getAirQuality()
+nyc_air_quality = nyc_air_quality[nyc_air_quality['SiteName'] == 'DEC_Avg']
+
+#Logic 4 - Traffic Accidents
 zip = name_to_zip[zone]
 nyc_tr_col = getTrafficAccData()
 nyc_tr_col = nyc_tr_col[nyc_tr_col['zip_code'].isin(zip)]
 
-#Logic 3a - Amount of Traffic Accidents
+#Logic 4a - Amount of Traffic Accidents
 nyc_tr_col_amt = nyc_tr_col.groupby(['crash_date']).count()
 nyc_tr_col_amt = nyc_tr_col_amt.reset_index()
 nyc_tr_col_amt.rename(columns={'crash_date':'Date','borough':'Incidents'}, inplace = True)
@@ -128,7 +135,7 @@ for i in missing_dates:
 
 nyc_tr_col_amt = nyc_tr_col_amt.sort_values(by=['Date'])
 
-#Logic 3b - Factors behind Traffic Accidents
+#Logic 4b - Factors behind Traffic Accidents
 nyc_tr_col_fact = nyc_tr_col.groupby(['contributing_factor_vehicle_1']).count()
 nyc_tr_col_fact = nyc_tr_col_fact.reset_index()
 nyc_tr_col_fact.rename(columns = {'contributing_factor_vehicle_1':'Factor','crash_date':'Instances'},inplace = True)
@@ -149,21 +156,21 @@ i1.append(total_other)
 factors = {'Factor':f1,'Instances':i1}
 factors_df = pd.DataFrame(factors)
 
-#Logic 4
+#Logic 5
 nyc_hate_crime = getHateCrimeData()
 #nyc_hate_crime = nyc_hate_crime[nyc_hate_crime['complaint_precinct_code'].isin(pol_pd)]
 
-# Logic 4a - Hate Crime Bias
+# Logic 5a - Hate Crime Bias
 nyc_hate_crime_bias = nyc_hate_crime.groupby(['bias_motive_description']).count()
 nyc_hate_crime_bias = nyc_hate_crime_bias.reset_index()
 nyc_hate_crime_bias.rename(columns={'bias_motive_description':'Bias','full_complaint_id':'Instances'},inplace = True)
 
-# Login 4b - Hate Crime Offenses
+# Login 5b - Hate Crime Offenses
 nyc_hate_crime_offense = nyc_hate_crime.groupby(['offense_category']).count()
 nyc_hate_crime_offense = nyc_hate_crime_offense.reset_index()
 nyc_hate_crime_offense.rename(columns = {'offense_category':'Offense','full_complaint_id':'Instances'},inplace = True)
 
-# Logic 5 - Refuse Line Graph
+# Logic 6 - Refuse Line Graph
 district = name_to_dist[zone]
 nyc_refuse = getRefuseData()
 nyc_refuse = nyc_refuse[nyc_refuse['borough'] == 'Manhattan']
@@ -187,7 +194,15 @@ fig.update_xaxes(fixedrange=True)
 fig.update_yaxes(fixedrange=True)
 st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False})
 
-#Row 3 - Traffic Accidents
+#row 3 - Air Quality
+st.markdown("### Air Quality")
+trace1 = go.Scatter(x = nyc_air_quality['starttime'], y = nyc_air_quality['Value'], mode = 'lines', name = 'PM2.5')
+layout = go.Layout(xaxis={'title':'Date'}, yaxis={'title':'Hourly PM2.5 measurements (in µg/m3)'}, autosize=True)
+fig = go.Figure(data = [trace1], layout = layout)
+st.plotly_chart(fig, use_container_width=True)
+
+
+#Row 4 - Traffic Accidents
 c1, c2, = st.columns((7,3))
 with c1:
     st.markdown('### Recent Traffic Accidents')
@@ -205,7 +220,7 @@ with c2:
         legend='bottom', 
         use_container_width=True)  
 
-# Row 4 - Hate Crimes - City Wide
+# Row 5 - Hate Crimes - City Wide
 c1, c2, = st.columns((7,3))
 with c1:
     st.markdown('### Hate Crime Biases')
@@ -222,7 +237,7 @@ with c2:
         legend='bottom', 
         use_container_width=True)
     
-#Row 5 - Refuse/Paper/MGP Tonnage
+#Row 6 - Refuse/Paper/MGP Tonnage
 st.markdown('### Garbage Collection')
 trace1 = go.Scatter(x = sorted['Month'], y = sorted['Refuse'], mode = 'lines', name = 'Refuse')
 trace2 = go.Scatter(x = sorted['Month'], y = sorted['Paper'], mode  = 'lines', name = 'Paper')
