@@ -4,6 +4,8 @@ import plost
 from streamlit_autorefresh import st_autorefresh
 import plotly.graph_objects as go
 import plotly.express as px
+import geopandas as gpd
+
 
 st.set_page_config(layout='wide')
 st_autorefresh(interval = 1800000)      # Number represents time units. Units here in milliseconds
@@ -24,7 +26,7 @@ st.header('Uptown Community Dashboard')
 
 # Creates a dropdown options box for each of the four districts
 zone = st.selectbox('Select District',('West Harlem','Central Harlem','East Harlem','Washington Heights'))
-
+st.info("Click data points for detailed information")
 # Relating District Names with zip codes and community/districs numbers
 name_to_dist = {'West Harlem':'09',
                 'Central Harlem':'10',
@@ -61,6 +63,9 @@ def getHateCrimeData():
     return data
 def getAirQuality():
     data = pd.read_csv('https://azdohv2staticweb.blob.core.windows.net/$web/nyccas_realtime_DEC.csv')
+    return data
+def getKioskData():
+    data = pd.read_csv('https://data.cityofnewyork.us/resource/xp25-gxux.csv')
     return data
 
 
@@ -178,6 +183,8 @@ nyc_refuse = nyc_refuse[nyc_refuse['communitydistrict'] == district]
 nyc_refuse.rename(columns = {'month':'Month','refusetonscollected':'Refuse','papertonscollected':'Paper','mgptonscollected':'MGP'}, inplace = True)
 sorted = nyc_refuse.sort_values('Month')
 
+
+
 ########## Graphics
 
 #Row 1 - Crime Breakdown 
@@ -203,7 +210,7 @@ st.plotly_chart(fig, use_container_width=True)
 
 
 #Row 4 - Traffic Accidents
-c1, c2, = st.columns((7,3))
+c1, c2, = st.columns((6,4))
 with c1:
     st.markdown('### Recent Traffic Accidents')
     fig = px.line(nyc_tr_col_amt, x = 'Date', y = 'Incidents', height = 350)
@@ -217,11 +224,10 @@ with c2:
         data=factors_df,
         theta='Instances',
         color='Factor',
-        legend='bottom', 
         use_container_width=True)  
 
 # Row 5 - Hate Crimes - City Wide
-c1, c2, = st.columns((7,3))
+c1, c2, = st.columns((6,4))
 with c1:
     st.markdown('### Hate Crime Biases')
     fig = px.bar(nyc_hate_crime_bias, x = 'Bias', y = 'Instances', height = 500)    
@@ -234,9 +240,9 @@ with c2:
         data=nyc_hate_crime_offense,
         theta='Instances',
         color='Offense',
-        legend='bottom', 
         use_container_width=True)
-    
+
+
 #Row 6 - Refuse/Paper/MGP Tonnage
 st.markdown('### Garbage Collection')
 trace1 = go.Scatter(x = sorted['Month'], y = sorted['Refuse'], mode = 'lines', name = 'Refuse')
@@ -247,3 +253,5 @@ layout = go.Layout(xaxis={'title':'Date'}, yaxis={'title':'Tonnage(T)'}, autosiz
 
 fig = go.Figure(data = [trace1,trace2,trace3], layout = layout)
 st.plotly_chart(fig, use_container_width=True)
+
+
