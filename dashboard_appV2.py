@@ -4,7 +4,6 @@ import plost
 from streamlit_autorefresh import st_autorefresh
 import plotly.graph_objects as go
 import plotly.express as px
-import geopandas as gpd
 
 
 st.set_page_config(layout='wide')
