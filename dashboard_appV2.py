@@ -4,13 +4,16 @@ import plost
 from streamlit_autorefresh import st_autorefresh
 import plotly.graph_objects as go
 import plotly.express as px
-
+import geopandas as gpd
+from PIL import Image
 
 st.set_page_config(layout='wide')
 st_autorefresh(interval = 1800000)      # Number represents time units. Units here in milliseconds
 
 with open('style.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+
 
 hide = """
             <style>
@@ -63,9 +66,7 @@ def getHateCrimeData():
 def getAirQuality():
     data = pd.read_csv('https://azdohv2staticweb.blob.core.windows.net/$web/nyccas_realtime_DEC.csv')
     return data
-def getKioskData():
-    data = pd.read_csv('https://data.cityofnewyork.us/resource/xp25-gxux.csv')
-    return data
+
 
 
 ########## Logic
@@ -111,6 +112,7 @@ for i in nyc_311.index:
         Amount[6] += nyc_311['Incidents'][i]
     else:
         Amount[7] += nyc_311['Incident Zip'][i]
+
 
 nyc_311_grouped = {'Complaint': Complaint, 'Incidents':Amount}
 
@@ -201,7 +203,7 @@ fig.update_yaxes(fixedrange=True)
 st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False})
 
 #row 3 - Air Quality
-st.markdown("### Air Quality")
+st.markdown("### Air Quality - Citywide")
 trace1 = go.Scatter(x = nyc_air_quality['starttime'], y = nyc_air_quality['Value'], mode = 'lines', name = 'PM2.5')
 layout = go.Layout(xaxis={'title':'Date'}, yaxis={'title':'Hourly PM2.5 measurements (in µg/m3)'}, autosize=True)
 fig = go.Figure(data = [trace1], layout = layout)
@@ -254,3 +256,13 @@ fig = go.Figure(data = [trace1,trace2,trace3], layout = layout)
 st.plotly_chart(fig, use_container_width=True)
 
 
+
+###Logos
+st.markdown("### Sponsored By:")
+c1, c2, c3, c4, c5 = st.columns(5)
+with c1:
+    image = Image.open('silicon_harlem.png')
+    st.image(image)
+    hide_img_fs = '''<style>button[title="View fullscreen"]{visibility: hidden;}</style>'''
+    st.markdown(hide_img_fs, unsafe_allow_html=True)
+    

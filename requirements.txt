@@ -3,3 +3,4 @@ pandas
 plost
 plotly
 streamlit_autorefresh
+Pillow
