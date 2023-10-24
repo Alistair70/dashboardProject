@@ -27,23 +27,26 @@ st.markdown(hide, unsafe_allow_html=True)
 st.header('Uptown Community Dashboard')
 
 # Creates a dropdown options box for each of the four districts
-zone = st.selectbox('Select District',('West Harlem','Central Harlem','East Harlem','Washington Heights'))
+zone = st.selectbox('Select District',('All Harlem','West Harlem','Central Harlem','East Harlem','Washington Heights'))
 st.info("Click data points for detailed information")
 # Relating District Names with zip codes and community/districs numbers
-name_to_dist = {'West Harlem':'09',
-                'Central Harlem':'10',
-                'East Harlem':'11',
-                'Washington Heights':'12'}
+name_to_dist = {'All Harlem':['09','10','11','12'],
+                'West Harlem':['09'],
+                'Central Harlem':['10'],
+                'East Harlem':['11'],
+                'Washington Heights':['12']}
 
-name_to_zip = {'West Harlem':[10025,10031,10039],
-               'Central Harlem':[10026,10027,10030,10037],
-               'East Harlem' : [10029,10035],
-               'Washington Heights' : [10032,10033,10040]}
+name_to_zip = { 'All Harlem': [10025,10031,10039,10026,10027,10030,10037,10029,10035,10032,10033,10040],
+                'West Harlem':[10025,10031,10039],
+                'Central Harlem':[10026,10027,10030,10037],
+                'East Harlem' : [10029,10035],
+                'Washington Heights' : [10032,10033,10040]}
 
-name_to_pd_precint = {'West Harlem' : [24,26,30],
-                      'Central Harlem' : [28,32],
-                      'East Harlem' : [23,25],
-                      'Washington Heights' : [33,34]}
+name_to_pd_precint = {  'All Harlem': [23,24,25,26,28,30,32,33,34],
+                        'West Harlem' : [24,26,30],
+                        'Central Harlem' : [28,32],
+                        'East Harlem' : [23,25],
+                        'Washington Heights' : [33,34]}
 
 # Getting and Caching Data
 @st.cache_data(ttl=179)          # Number represents time units. Units here in seconds
@@ -176,15 +179,19 @@ nyc_hate_crime_offense = nyc_hate_crime.groupby(['offense_category']).count()
 nyc_hate_crime_offense = nyc_hate_crime_offense.reset_index()
 nyc_hate_crime_offense.rename(columns = {'offense_category':'Offense','full_complaint_id':'Instances'},inplace = True)
 
+
 # Logic 6 - Refuse Line Graph
 district = name_to_dist[zone]
 nyc_refuse = getRefuseData()
 nyc_refuse = nyc_refuse[nyc_refuse['borough'] == 'Manhattan']
-nyc_refuse = nyc_refuse[nyc_refuse['communitydistrict'] == district]
-nyc_refuse.rename(columns = {'month':'Month','refusetonscollected':'Refuse','papertonscollected':'Paper','mgptonscollected':'MGP'}, inplace = True)
-sorted = nyc_refuse.sort_values('Month')
+nyc_refuse = nyc_refuse[nyc_refuse['communitydistrict'].isin(district)]
+refuse = nyc_refuse.groupby('month')['refusetonscollected'].sum().reset_index()
+paper = nyc_refuse.groupby('month')['papertonscollected'].sum().reset_index()
+mpg = nyc_refuse.groupby('month')['mgptonscollected'].sum().reset_index()
 
-
+refuse.rename(columns = {'month': 'Month', 'refusetonscollected':'Refuse'}, inplace=True)
+paper.rename(columns = {'month': 'Month', 'papertonscollected':'Paper'}, inplace=True)
+mpg.rename(columns = {'month': 'Month', 'mgptonscollected':'MGP'}, inplace=True)
 
 ########## Graphics
 
@@ -202,13 +209,12 @@ fig.update_xaxes(fixedrange=True)
 fig.update_yaxes(fixedrange=True)
 st.plotly_chart(fig, use_container_width=True, config = {'displayModeBar': False})
 
-#row 3 - Air Quality
+#Row 3 - Air Quality
 st.markdown("### Air Quality - Citywide")
 trace1 = go.Scatter(x = nyc_air_quality['starttime'], y = nyc_air_quality['Value'], mode = 'lines', name = 'PM2.5')
 layout = go.Layout(xaxis={'title':'Date'}, yaxis={'title':'Hourly PM2.5 measurements (in µg/m3)'}, autosize=True)
 fig = go.Figure(data = [trace1], layout = layout)
 st.plotly_chart(fig, use_container_width=True)
-
 
 #Row 4 - Traffic Accidents
 c1, c2, = st.columns((6,4))
@@ -230,13 +236,13 @@ with c2:
 # Row 5 - Hate Crimes - City Wide
 c1, c2, = st.columns((6,4))
 with c1:
-    st.markdown('### Hate Crime Biases')
+    st.markdown('### Hate Crime Biases Citywide')
     fig = px.bar(nyc_hate_crime_bias, x = 'Bias', y = 'Instances', height = 500)    
     fig.update_xaxes(fixedrange=True)
     fig.update_yaxes(fixedrange=True)
     st.plotly_chart(fig, use_container_width=True,config = {'displayModeBar': False})
 with c2:
-    st.markdown('### Hate Crime Offences')
+    st.markdown('### Hate Crime Offences Citywide')
     plost.donut_chart(
         data=nyc_hate_crime_offense,
         theta='Instances',
@@ -246,9 +252,9 @@ with c2:
 
 #Row 6 - Refuse/Paper/MGP Tonnage
 st.markdown('### Garbage Collection')
-trace1 = go.Scatter(x = sorted['Month'], y = sorted['Refuse'], mode = 'lines', name = 'Refuse')
-trace2 = go.Scatter(x = sorted['Month'], y = sorted['Paper'], mode  = 'lines', name = 'Paper')
-trace3 = go.Scatter(x = sorted['Month'], y = sorted['MGP'], mode  = 'lines', name = 'Metal/Glass/Plastic')
+trace1 = go.Scatter(x = refuse['Month'], y = refuse['Refuse'], mode = 'lines', name = 'Refuse')
+trace2 = go.Scatter(x = paper['Month'], y = paper['Paper'], mode  = 'lines', name = 'Paper')
+trace3 = go.Scatter(x = mpg['Month'], y = mpg['MGP'], mode  = 'lines', name = 'Metal/Glass/Plastic')
 
 layout = go.Layout(xaxis={'title':'Date'}, yaxis={'title':'Tonnage(T)'}, autosize=True)
 
